@@ -7,11 +7,11 @@
 SecuriScan is an enterprise-grade, automated vulnerability management platform designed to help organizations continuously discover, prioritize, and remediate security weaknesses in their web applications before malicious attackers can exploit them.
 
 ### 🛠️ Tech Stack
-- Frontend: React 18, TypeScript, Tailwind CSS
-- Backend: Next.js 14 (App Router)
+- Frontend: React 19, TypeScript, Tailwind CSS
+- Backend: Next.js 16 (App Router)
 - Database: MongoDB Atlas
 - Scanners: Python 3.x
-- Deployment: Vercel
+- Deployment: Node.js hosting with a Python runtime for scans
 
 ### 🚀 Quick Start
 
@@ -34,9 +34,13 @@ Make sure you have the following installed:
    npm install
    ```
 
-3. Install Python dependencies:
+3. Create the project Python environment and install the scanner dependencies:
    ```bash
-   pip install -r scanners/requirements.txt
+   python -m venv .venv
+   # Windows PowerShell
+   .\.venv\Scripts\python -m pip install -r scanners/requirements.txt
+   # macOS/Linux
+   ./.venv/bin/python -m pip install -r scanners/requirements.txt
    ```
 
 4. Set up environment variables:
@@ -46,6 +50,14 @@ Make sure you have the following installed:
    Then update the file with your MongoDB connection string. The dashboard uses
    the project virtual environment by default; set `SECURISCAN_PYTHON` only to
    override that location.
+
+   Set a long random `NEXTAUTH_SECRET`. To create the first local demo account,
+   also set `SECURISCAN_ALLOW_REGISTRATION=true`, run the app, and use **Create
+   account**. The first account receives an owner label and later local accounts
+   receive an analyst label, ready for the future RBAC milestone. Every signed-in
+   account currently has the same assessment features and can access only its own
+   stored results. Registration is disabled by default and must stay disabled in
+   deployed environments until an administrator provisioning flow is added.
 
 5. Run the development server:
    ```bash
@@ -60,6 +72,26 @@ Make sure you have the following installed:
 The first dashboard lets you select scanner modules, confirm you are authorized
 to assess the target, and review the combined findings. It accepts public HTTP(S)
 targets only and blocks private or local-network addresses.
+
+Each authenticated account can run assessments and sees only its own saved scans,
+recent history, severity counts, and finding trends. The dashboard performs a
+server-side session check before a scan or stored-data request is accepted.
+
+If your network blocks the DNS SRV lookup used by an Atlas `mongodb+srv` URI, add
+`MONGODB_DNS_SERVERS=1.1.1.1,8.8.8.8` to `.env.local`. Also add your current IP
+address in Atlas **Network Access** before connecting.
+
+### Local demonstration target
+
+For presentations, run the intentionally vulnerable local target:
+
+```bash
+.\.venv\Scripts\python scanners/demo_target.py
+```
+
+Start the dashboard with `SECURISCAN_ALLOW_PRIVATE_TARGETS=true` for that local
+session only, then scan `http://127.0.0.1:8080` with every module selected.
+Never enable this setting in a deployed environment.
 
 ### 📁 Project Structure
 ```text
@@ -119,6 +151,6 @@ python run_scan.py https://your-target.com --output ../reports/scan-report.json
 
 ### 📋 Planned Features
 - Risk-based prioritization dashboard
-- User authentication and RBAC
+- RBAC administration and production account provisioning
 - Remediation workflow and ticketing
 - Professional PDF report generation

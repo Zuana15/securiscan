@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { getCurrentUser } from "@/src/lib/current-user";
 import "./globals.css";
+
+import SiteShell from "./components/site-shell";
 
 const siteMetadata = {
   title: "SecuriScan | Vulnerability assessments",
@@ -30,14 +33,16 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await getCurrentUser();
+
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body><SiteShell initialUser={user}>{children}</SiteShell></body>
     </html>
   );
 }

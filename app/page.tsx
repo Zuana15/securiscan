@@ -1,5 +1,5 @@
-import ScanDashboard from "./components/scan-dashboard";
+import LandingPage from "./components/landing-page";
 
 export default function Home() {
-  return <ScanDashboard />;
+  return <LandingPage />;
 }

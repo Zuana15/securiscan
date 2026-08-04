@@ -1,8 +1,11 @@
 import { spawn } from "node:child_process";
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
+import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
+import { authOptions } from "@/src/lib/auth-options";
+import { persistScanReport } from "@/src/lib/scan-repository";
 import { SCANNER_IDS, type ScanReport, type ScannerId } from "@/src/lib/scan-types";
 
 export const runtime = "nodejs";
@@ -105,6 +108,13 @@ async function ensurePublicTarget(target: string): Promise<void> {
   }
 }
 
+function canScanPrivateDevelopmentTargets(): boolean {
+  return (
+    process.env.NODE_ENV === "development" &&
+    process.env.SECURISCAN_ALLOW_PRIVATE_TARGETS === "true"
+  );
+}
+
 function parseScanners(value: unknown): ScannerId[] {
   if (!Array.isArray(value) || value.length === 0) {
     throw new RequestError("Choose at least one scanner.", 400);
@@ -134,7 +144,9 @@ function extractReport(output: string): ScanReport {
 function runScan(target: string, scanners: ScannerId[]): Promise<ScanReport> {
   const python =
     process.env.SECURISCAN_PYTHON?.trim() ||
-    (process.platform === "win32" ? ".venv\\Scripts\\python.exe" : ".venv/bin/python");
+    (process.platform === "win32"
+      ? "..\\.venv\\Scripts\\python.exe"
+      : "../.venv/bin/python");
   const scannerDirectory = "scanners";
   const script = "run_scan.py";
 
@@ -217,6 +229,12 @@ function runScan(target: string, scanners: ScannerId[]): Promise<ScanReport> {
 
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const ownerId = session?.user?.id;
+    if (!ownerId) {
+      return NextResponse.json({ error: "Sign in before running an assessment." }, { status: 401 });
+    }
+
     const body: unknown = await request.json();
     if (!body || typeof body !== "object") {
       throw new RequestError("Send a valid scan request.", 400);
@@ -232,10 +250,14 @@ export async function POST(request: Request) {
 
     const normalizedTarget = normalizeTarget(target);
     const selectedScanners = parseScanners(scanners);
-    await ensurePublicTarget(normalizedTarget);
+    if (!canScanPrivateDevelopmentTargets()) {
+      await ensurePublicTarget(normalizedTarget);
+    }
     const report = await runScan(normalizedTarget, selectedScanners);
 
-    return NextResponse.json(report);
+    const persistence = await persistScanReport(report, selectedScanners, ownerId);
+
+    return NextResponse.json({ ...report, persistence });
   } catch (error) {
     if (error instanceof RequestError) {
       return NextResponse.json({ error: error.message }, { status: error.status });

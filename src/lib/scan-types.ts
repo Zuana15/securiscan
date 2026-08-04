@@ -52,6 +52,15 @@ export interface ScanSummary {
   total_findings: number;
 }
 
+export interface ModuleScanResult {
+  scan_type: string;
+  status: "completed" | "failed";
+  summary: ScanSummary;
+  metadata?: {
+    error?: string;
+  };
+}
+
 export interface ScanReport {
   target: string;
   scan_type: "full_assessment";
@@ -59,4 +68,61 @@ export interface ScanReport {
   status: string;
   summary: ScanSummary;
   findings: Finding[];
+  scans: Record<string, ModuleScanResult>;
+  persistence?: ScanPersistence;
+}
+
+export interface ScanPersistence {
+  state: "saved" | "unavailable" | "disabled" | "failed";
+  recordId?: string;
+  message?: string;
+}
+
+export interface ScanHistoryItem {
+  id: string;
+  target: string;
+  selectedScanners: ScannerId[];
+  status: string;
+  completedAt: string;
+  summary: ScanSummary;
+}
+
+export interface ScanHistoryResponse {
+  available: boolean;
+  message?: string;
+  items: ScanHistoryItem[];
+}
+
+export interface SeverityBreakdown {
+  critical: number;
+  high: number;
+  medium: number;
+  low: number;
+  info: number;
+}
+
+export interface ScanTrendPoint {
+  date: string;
+  scans: number;
+  findings: number;
+}
+
+export interface ScannerFindingCount {
+  scanType: string;
+  findings: number;
+}
+
+export interface ScanAnalytics {
+  totalScans: number;
+  uniqueTargets: number;
+  totalFindings: number;
+  severity: SeverityBreakdown;
+  trend: ScanTrendPoint[];
+  scannerFindings: ScannerFindingCount[];
+}
+
+export interface ScanAnalyticsResponse {
+  available: boolean;
+  message?: string;
+  analytics?: ScanAnalytics;
 }
