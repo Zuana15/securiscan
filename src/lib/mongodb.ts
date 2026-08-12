@@ -47,6 +47,9 @@ async function dbConnect(): Promise<typeof mongoose> {
     const opts = {
       bufferCommands: false,
       serverSelectionTimeoutMS: 5_000,
+      // Atlas is reachable over IPv4 on networks where Node's IPv6 route can
+      // fail during the TLS handshake (notably on some Windows/ISP setups).
+      family: 4 as const,
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
