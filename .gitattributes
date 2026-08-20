@@ -1,0 +1,18 @@
+* text=auto
+
+# Keep source and configuration files consistent across Windows and CI.
+*.css text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.mjs text eol=lf
+*.py text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Office and image assets are binary.
+*.docx binary
+*.pdf binary
+*.png binary
+*.pptx binary

@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
 import { authOptions } from "@/src/lib/auth-options";
+import { parseRiskContext, scoreScanReport } from "@/src/lib/risk-scoring";
 import { persistScanReport } from "@/src/lib/scan-repository";
 import { SCANNER_IDS, type ScanReport, type ScannerId } from "@/src/lib/scan-types";
 
@@ -145,14 +146,12 @@ function runScan(target: string, scanners: ScannerId[]): Promise<ScanReport> {
   const python =
     process.env.SECURISCAN_PYTHON?.trim() ||
     (process.platform === "win32"
-      ? "..\\.venv\\Scripts\\python.exe"
-      : "../.venv/bin/python");
-  const scannerDirectory = "scanners";
-  const script = "run_scan.py";
+      ? ".venv\\Scripts\\python.exe"
+      : ".venv/bin/python");
+  const script = "scanners/run_scan.py";
 
   return new Promise((resolve, reject) => {
     const scannerProcess = spawn(python, [script, target, "--scanners", ...scanners], {
-      cwd: scannerDirectory,
       env: {
         ...process.env,
         PYTHONIOENCODING: "utf-8",
@@ -240,7 +239,7 @@ export async function POST(request: Request) {
       throw new RequestError("Send a valid scan request.", 400);
     }
 
-    const { target, scanners, authorized } = body as Record<string, unknown>;
+    const { target, scanners, authorized, riskContext: riskContextInput } = body as Record<string, unknown>;
     if (authorized !== true) {
       throw new RequestError(
         "Confirm that you own the target or have written authorization before scanning.",
@@ -250,10 +249,19 @@ export async function POST(request: Request) {
 
     const normalizedTarget = normalizeTarget(target);
     const selectedScanners = parseScanners(scanners);
+    let riskContext;
+    try {
+      riskContext = parseRiskContext(riskContextInput);
+    } catch (error) {
+      throw new RequestError(
+        error instanceof Error ? error.message : "Provide valid risk context for this assessment.",
+        400,
+      );
+    }
     if (!canScanPrivateDevelopmentTargets()) {
       await ensurePublicTarget(normalizedTarget);
     }
-    const report = await runScan(normalizedTarget, selectedScanners);
+    const report = scoreScanReport(await runScan(normalizedTarget, selectedScanners), riskContext);
 
     const persistence = await persistScanReport(report, selectedScanners, ownerId);
 

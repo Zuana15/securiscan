@@ -6,6 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "tsx --test src/lib/*.test.ts",
+    "risk:benchmark": "tsx scripts/evaluate-risk-model.ts",
+    "verify": "npm test && npm run lint && npm run build && npm run risk:benchmark",
     "lint": "eslint"
   },
   "dependencies": {
@@ -23,6 +26,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",
+    "tsx": "^4.23.12",
     "typescript": "^5"
   }
 }

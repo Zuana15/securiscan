@@ -63,6 +63,21 @@ export async function POST(request: Request) {
     }
 
     console.error("Account registration failed", error);
+
+    if (
+      error instanceof Error &&
+      (error.name === "MongooseServerSelectionError" ||
+        error.message.includes("Could not connect to any servers"))
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "MongoDB Atlas is unreachable. Check the cluster status and add this PC's current public IP in Atlas Network Access, then try again.",
+        },
+        { status: 503 },
+      );
+    }
+
     return NextResponse.json({ error: "The account could not be created. Try again." }, { status: 503 });
   }
 }

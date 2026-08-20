@@ -4,7 +4,10 @@
 
 
 ### 🎯 Project Overview
-SecuriScan is an enterprise-grade, automated vulnerability management platform designed to help organizations continuously discover, prioritize, and remediate security weaknesses in their web applications before malicious attackers can exploit them.
+SecuriScan is a full-stack research prototype for automated web vulnerability
+assessment and explainable remediation prioritization. It helps analysts run a
+bounded nine-module assessment, preserve evidence, apply business and threat
+context, and review the most urgent findings first.
 
 ### 🛠️ Tech Stack
 - Frontend: React 19, TypeScript, Tailwind CSS
@@ -74,8 +77,68 @@ to assess the target, and review the combined findings. It accepts public HTTP(S
 targets only and blocks private or local-network addresses.
 
 Each authenticated account can run assessments and sees only its own saved scans,
-recent history, severity counts, and finding trends. The dashboard performs a
-server-side session check before a scan or stored-data request is accepted.
+recent history, severity counts, finding trends, and risk-priority analytics. The
+dashboard performs a server-side session check before a scan or stored-data request
+is accepted.
+
+### Risk-scoring MVP
+
+Every new scan is prioritized by a deterministic, explainable `risk-v1` model. The
+model combines the scanner severity/CVSS-like baseline with asset criticality,
+exposure, analyst-supplied threat context, business impact, scanner-derived
+exploitability, and compensating controls. Scores range from 0 to 100 and map to
+low, medium, high, or critical remediation priority.
+
+The scan form captures the business context, every finding shows its factor-by-factor
+score breakdown, and MongoDB stores both the selected context and calculated risk
+summary. The history and analytics views show highest/average score and priority
+counts. Version 1 does not call an AI service or a live threat-intelligence feed;
+the threat-context value is supplied by the analyst.
+
+The repository also contains a repeatable prototype benchmark with 12 calibration
+and 12 separate validation scenarios. It compares pairwise remediation ranking
+accuracy against a CVSS-only baseline and evaluates five weight candidates without
+using the validation cases for candidate selection. On this internal dataset,
+Risk v1 scores 96.97% versus 56.06% for CVSS-only ranking: a 40.91 percentage-point
+gain and 72.98% relative improvement. These developer-authored labels demonstrate
+the mechanism, but they are not independent research proof; a blinded expert-labelled
+WebGoat/DVWA-derived dataset is still required before making the formal 30% claim.
+
+Run the risk-model tests with:
+
+```bash
+npm test
+```
+
+Run the benchmark report with:
+
+```bash
+npm run risk:benchmark
+```
+
+### Release verification
+
+Run the complete release-candidate verification suite with:
+
+```bash
+npm run verify
+```
+
+The command runs the automated risk-model tests, ESLint, a production Next.js
+build, and the repeatable risk benchmark. A release demonstration should also
+verify the following authenticated workflow:
+
+1. Create an account and sign in.
+2. Run all nine modules against the authorized local demonstration target.
+3. Confirm that all nine module cards show **Completed**.
+4. Confirm that the scan is saved and appears in **Scan History**.
+5. Confirm that **Analytics** includes the scan and risk-priority totals.
+6. Open a finding and verify its seven-factor risk explanation.
+
+The scan API launches Python as a child process. Next.js may therefore emit a
+non-fatal file-tracing warning while producing a successful build. SecuriScan
+must be deployed on a Node.js host that also provides Python and the scanner
+dependencies; it is not compatible with a static-only deployment.
 
 If your network blocks the DNS SRV lookup used by an Atlas `mongodb+srv` URI, add
 `MONGODB_DNS_SERVERS=1.1.1.1,8.8.8.8` to `.env.local`. Also add your current IP
@@ -96,11 +159,10 @@ Never enable this setting in a deployed environment.
 ### 📁 Project Structure
 ```text
 securiscan/
+├── app/                 # Next.js pages, components, styles, and API routes
 ├── src/
-│   ├── app/              # Next.js App Router pages and API routes
-│   ├── components/       # Reusable React components
-│   ├── lib/              # Utility functions and database connection
-│   └── types/            # TypeScript type definitions
+│   ├── lib/             # Auth, persistence, scan types, scoring, and benchmark
+│   └── models/          # MongoDB user and scan-record schemas
 ├── scanners/             # Python vulnerability scanning modules
 │   ├── common.py           # Shared result schema and helpers
 │   ├── run_scan.py         # Run all scanners from one command
@@ -113,8 +175,10 @@ securiscan/
 │   ├── sensitive_files.py  # Exposed files & backups
 │   ├── csrf_scanner.py     # Missing CSRF token checks
 │   └── http_misconfig.py   # HTTP methods, cookies, CORS
-├── public/               # Static assets
-└── reports/              # Generated PDF reports
+├── benchmarks/          # Benchmark design and evidence-boundary documentation
+├── scripts/             # Executable risk-model evaluation
+├── public/              # Static assets
+└── reports/             # Local generated reports
 ```
 
 ### 🔍 Vulnerability Scanners (Python)
@@ -150,7 +214,8 @@ python run_scan.py https://your-target.com --output ../reports/scan-report.json
 **Important:** Only scan systems you own or have explicit written authorization to test.
 
 ### 📋 Planned Features
-- Risk-based prioritization dashboard
+- Independent expert-labelled risk benchmark and external validation
+- Automated threat-intelligence enrichment
 - RBAC administration and production account provisioning
 - Remediation workflow and ticketing
 - Professional PDF report generation

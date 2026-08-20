@@ -1,9 +1,12 @@
 import dbConnect, { isMongoConfigured } from "@/src/lib/mongodb";
+import { evaluateRiskBenchmark } from "@/src/lib/risk-benchmark";
 import type {
   ScanAnalytics,
   ScanHistoryItem,
   ScanPersistence,
   ScanReport,
+  RiskPriority,
+  RiskSummary,
   ScannerFindingCount,
   ScannerId,
   SeverityBreakdown,
@@ -36,6 +39,8 @@ export async function persistScanReport(
       summary: report.summary,
       findings: report.findings,
       scans: report.scans,
+      riskContext: report.riskContext,
+      riskSummary: report.riskSummary,
     });
 
     return { state: "saved", recordId: record.id };
@@ -59,6 +64,7 @@ export async function listScanHistory(ownerId: string, limit = HISTORY_LIMIT): P
     status: record.status,
     completedAt: record.completedAt.toISOString(),
     summary: record.summary,
+    riskSummary: record.riskSummary,
   }));
 }
 
@@ -73,6 +79,8 @@ export async function getScanAnalytics(ownerId: string): Promise<ScanAnalytics> 
   const trendByDate = new Map<string, { scans: number; findings: number }>();
   const findingsByScanner = new Map<string, number>();
   let totalFindings = 0;
+  const riskScores: number[] = [];
+  const riskPriorities: Record<RiskPriority, number> = { critical: 0, high: 0, medium: 0, low: 0 };
 
   for (const record of records) {
     targets.add(record.target);
@@ -92,6 +100,10 @@ export async function getScanAnalytics(ownerId: string): Promise<ScanAnalytics> 
     for (const finding of record.findings) {
       const scanType = finding.scan_type ?? "other";
       findingsByScanner.set(scanType, (findingsByScanner.get(scanType) ?? 0) + 1);
+      if (finding.risk) {
+        riskScores.push(finding.risk.score);
+        riskPriorities[finding.risk.priority] += 1;
+      }
     }
   }
 
@@ -99,6 +111,14 @@ export async function getScanAnalytics(ownerId: string): Promise<ScanAnalytics> 
     .map(([scanType, findings]) => ({ scanType, findings }))
     .sort((left, right) => right.findings - left.findings)
     .slice(0, 5);
+  const risk: RiskSummary = {
+    averageScore: riskScores.length
+      ? Math.round(riskScores.reduce((total, score) => total + score, 0) / riskScores.length)
+      : 0,
+    highestScore: riskScores.length ? Math.max(...riskScores) : 0,
+    scoredFindings: riskScores.length,
+    priorities: riskPriorities,
+  };
 
   return {
     totalScans: records.length,
@@ -110,5 +130,7 @@ export async function getScanAnalytics(ownerId: string): Promise<ScanAnalytics> 
       .sort((left, right) => left.date.localeCompare(right.date))
       .slice(-7),
     scannerFindings,
+    risk,
+    benchmark: evaluateRiskBenchmark(),
   };
 }

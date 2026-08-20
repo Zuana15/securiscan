@@ -4,6 +4,8 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { signIn, signOut } from "next-auth/react";
 
 import { useSiteTheme } from "./site-shell";
+import { evaluateRiskBenchmark } from "@/src/lib/risk-benchmark";
+import { DEFAULT_RISK_CONTEXT } from "@/src/lib/risk-scoring";
 
 import {
   SCANNERS,
@@ -12,12 +14,46 @@ import {
   type ScanHistoryItem,
   type ScanHistoryResponse,
   type Finding,
+  type RiskContext,
+  type RiskPriority,
   type ScanReport,
   type ScannerId,
   type Severity,
 } from "@/src/lib/scan-types";
 
 const severityOrder: Severity[] = ["critical", "high", "medium", "low", "info"];
+const riskPriorityOrder: RiskPriority[] = ["critical", "high", "medium", "low"];
+const modelBenchmark = evaluateRiskBenchmark();
+
+const riskContextOptions = {
+  assetCriticality: [
+    ["low", "Low — non-essential service"],
+    ["moderate", "Moderate — normal business service"],
+    ["high", "High — important business service"],
+    ["critical", "Critical — mission-critical service"],
+  ],
+  exposure: [
+    ["internal", "Internal network"],
+    ["authenticated", "Internet-facing behind authentication"],
+    ["public", "Public internet"],
+  ],
+  threatIntel: [
+    ["none", "No known exploitation activity"],
+    ["emerging", "Emerging exploitation reports"],
+    ["active", "Active exploitation observed"],
+  ],
+  businessImpact: [
+    ["low", "Low"],
+    ["moderate", "Moderate"],
+    ["high", "High"],
+    ["severe", "Severe"],
+  ],
+  compensatingControls: [
+    ["none", "None verified"],
+    ["partial", "Partial controls"],
+    ["strong", "Strong verified controls"],
+  ],
+} as const;
 
 const scannerIdsByResultType: Record<string, ScannerId> = {
   security_headers: "headers",
@@ -71,7 +107,14 @@ function FindingCard({ finding }: { finding: Finding }) {
           <p className="eyebrow">{scannerName(finding.scan_type)}</p>
           <h3>{finding.title}</h3>
         </div>
-        <span className={`severity severity-${finding.severity}`}>{finding.severity}</span>
+        <div className="finding-badges">
+          {finding.risk && (
+            <span className={`risk-badge risk-${finding.risk.priority}`}>
+              Risk {finding.risk.score}
+            </span>
+          )}
+          <span className={`severity severity-${finding.severity}`}>{finding.severity}</span>
+        </div>
       </div>
       <p className="finding-description">{finding.description}</p>
       {(finding.owasp || finding.cwe) && (
@@ -79,6 +122,25 @@ function FindingCard({ finding }: { finding: Finding }) {
       )}
       {finding.location && <p className="finding-location">Location: {finding.location}</p>}
       {finding.evidence && <p className="finding-evidence">Evidence: {finding.evidence}</p>}
+      {finding.risk && (
+        <details className="risk-breakdown">
+          <summary>
+            Why this is {finding.risk.priority} priority
+            <span>CVSS baseline {finding.risk.cvssEquivalent.toFixed(1)}</span>
+          </summary>
+          <div className="risk-factor-list">
+            {finding.risk.factors.map((factor) => (
+              <div key={factor.key}>
+                <span><strong>{factor.label}</strong><small>{factor.value} · {factor.reason}</small></span>
+                <em className={factor.contribution < 0 ? "risk-reduction" : ""}>
+                  {factor.contribution > 0 ? "+" : ""}{factor.contribution}
+                </em>
+              </div>
+            ))}
+          </div>
+          <p>Risk v1 is deterministic and explainable. Threat context is supplied by the analyst; no live threat-intelligence or AI service is used.</p>
+        </details>
+      )}
       {finding.recommendation && (
         <p className="finding-recommendation">
           <strong>Recommended action:</strong> {finding.recommendation}
@@ -269,6 +331,7 @@ function AnalyticsPanel({
   signedIn: boolean;
 }) {
   const highestTrendValue = Math.max(...(analytics?.trend.map((point) => point.findings) ?? [1]), 1);
+  const benchmark = analytics?.benchmark ?? modelBenchmark;
 
   return (
     <section className="data-panel" aria-labelledby="analytics-title">
@@ -292,6 +355,8 @@ function AnalyticsPanel({
             <div><span>Total scans</span><strong>{analytics.totalScans}</strong></div>
             <div><span>Targets assessed</span><strong>{analytics.uniqueTargets}</strong></div>
             <div><span>Findings recorded</span><strong>{analytics.totalFindings}</strong></div>
+            <div><span>Average risk</span><strong>{analytics.risk.averageScore}</strong></div>
+            <div><span>Highest risk</span><strong>{analytics.risk.highestScore}</strong></div>
           </div>
 
           <div className="analytics-grid">
@@ -321,9 +386,84 @@ function AnalyticsPanel({
                 </div>
               ) : <p className="compact-empty">No trend data yet.</p>}
             </div>
+
+            <div>
+              <h3>Risk priority distribution</h3>
+              {analytics.risk.scoredFindings ? (
+                <div className="risk-priority-list">
+                  {riskPriorityOrder.map((priority) => (
+                    <div key={priority}>
+                      <span className={`risk-badge risk-${priority}`}>{priority}</span>
+                      <strong>{analytics.risk.priorities[priority]}</strong>
+                    </div>
+                  ))}
+                </div>
+              ) : <p className="compact-empty">Run a new assessment to generate Risk v1 scores.</p>}
+            </div>
           </div>
         </>
       )}
+
+      <section className="benchmark-panel" aria-labelledby="benchmark-title">
+        <div className="benchmark-heading">
+            <div>
+              <p className="eyebrow">Model validation</p>
+              <h3 id="benchmark-title">Risk v1 compared with CVSS-only ranking</h3>
+              <p>{benchmark.validationCases} holdout scenarios | {benchmark.riskV1.evaluatedPairs} ranking pairs</p>
+            </div>
+            <span className={benchmark.targetMet ? "benchmark-target-met" : "benchmark-target-pending"}>
+              {benchmark.targetMet ? "Prototype target met" : "Target not met"}
+            </span>
+          </div>
+
+          <div className="benchmark-metrics">
+            <div>
+              <span>CVSS-only accuracy</span>
+              <strong>{benchmark.cvssOnly.pairwiseAccuracy}%</strong>
+            </div>
+            <div>
+              <span>Risk v1 accuracy</span>
+              <strong>{benchmark.riskV1.pairwiseAccuracy}%</strong>
+            </div>
+            <div>
+              <span>Relative improvement</span>
+              <strong>+{benchmark.relativeImprovement}%</strong>
+            </div>
+            <div>
+              <span>Percentage-point gain</span>
+              <strong>+{benchmark.percentagePointGain}</strong>
+            </div>
+          </div>
+
+          <div className="benchmark-bars" aria-label="Pairwise ranking accuracy comparison">
+            <div>
+              <span>CVSS only</span>
+              <i><b style={{ width: `${benchmark.cvssOnly.pairwiseAccuracy}%` }} /></i>
+              <strong>{benchmark.cvssOnly.pairwiseAccuracy}%</strong>
+            </div>
+            <div>
+              <span>Risk v1</span>
+              <i><b style={{ width: `${benchmark.riskV1.pairwiseAccuracy}%` }} /></i>
+              <strong>{benchmark.riskV1.pairwiseAccuracy}%</strong>
+            </div>
+          </div>
+
+          <details className="benchmark-details">
+            <summary>Calibration candidates and methodology</summary>
+            <div className="benchmark-candidates">
+              {benchmark.candidates.map((candidate) => (
+                <div key={candidate.id}>
+                  <span>{candidate.name}{candidate.selected ? " | recommended" : ""}</span>
+                  <strong>{candidate.pairwiseAccuracy}%</strong>
+                  <small>MAE {candidate.meanAbsoluteError}</small>
+                </div>
+              ))}
+            </div>
+            <p>Pairwise accuracy measures how often a model puts the more urgent finding first. Candidate weights are selected only on calibration cases; the displayed comparison uses separate validation cases.</p>
+          </details>
+
+        <p className="benchmark-limitation"><strong>Evidence boundary:</strong> {benchmark.limitation}</p>
+      </section>
     </section>
   );
 }
@@ -373,8 +513,17 @@ function HistoryPanel({
                 <span>{formatDate(scan.completedAt)} · {scan.selectedScanners.length} modules</span>
               </div>
               <div className="history-summary">
-                <strong>{scan.summary.total_findings}</strong>
-                <span>findings</span>
+                {scan.riskSummary ? (
+                  <>
+                    <strong>{scan.riskSummary.highestScore}</strong>
+                    <span>highest risk · {scan.summary.total_findings} findings</span>
+                  </>
+                ) : (
+                  <>
+                    <strong>{scan.summary.total_findings}</strong>
+                    <span>findings · not yet scored</span>
+                  </>
+                )}
               </div>
             </article>
           ))}
@@ -389,6 +538,8 @@ export default function ScanDashboard({ initialUser, registrationEnabled, view, 
   const [professionalUi, setProfessionalUi] = useState(true);
   const [target, setTarget] = useState("");
   const [authorized, setAuthorized] = useState(false);
+  const [riskContext, setRiskContext] = useState<RiskContext>({ ...DEFAULT_RISK_CONTEXT });
+  const [findingSort, setFindingSort] = useState<"risk" | "severity" | "module">("risk");
   const [selected, setSelected] = useState<ScannerId[]>(() =>
     SCANNERS.map((scanner) => scanner.id),
   );
@@ -409,6 +560,18 @@ export default function ScanDashboard({ initialUser, registrationEnabled, view, 
     () => SCANNERS.filter((scanner) => selected.includes(scanner.id)),
     [selected],
   );
+  const sortedFindings = useMemo(() => {
+    if (!report) return [];
+    return [...report.findings].sort((left, right) => {
+      if (findingSort === "severity") {
+        return severityOrder.indexOf(left.severity) - severityOrder.indexOf(right.severity);
+      }
+      if (findingSort === "module") {
+        return scannerName(left.scan_type).localeCompare(scannerName(right.scan_type));
+      }
+      return (right.risk?.score ?? 0) - (left.risk?.score ?? 0);
+    });
+  }, [findingSort, report]);
 
   const refreshStoredData = useCallback(async () => {
     if (!initialUser) {
@@ -463,6 +626,10 @@ export default function ScanDashboard({ initialUser, registrationEnabled, view, 
     setSelected([]);
   }
 
+  function updateRiskContext<Key extends keyof RiskContext>(key: Key, value: RiskContext[Key]) {
+    setRiskContext((current) => ({ ...current, [key]: value }));
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -473,7 +640,7 @@ export default function ScanDashboard({ initialUser, registrationEnabled, view, 
       const response = await fetch("/api/scans", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ target, scanners: selected, authorized }),
+        body: JSON.stringify({ target, scanners: selected, authorized, riskContext }),
       });
       const payload = (await response.json()) as ScanReport | { error?: string };
 
@@ -582,6 +749,59 @@ export default function ScanDashboard({ initialUser, registrationEnabled, view, 
             development demo session.
           </p>
 
+          <fieldset className="risk-context-fieldset">
+            <legend>Business and threat context</legend>
+            <p>These analyst-supplied values make remediation priority more useful than severity alone.</p>
+            <div className="risk-context-grid">
+              <label>
+                Asset criticality
+                <select
+                  value={riskContext.assetCriticality}
+                  onChange={(event) => updateRiskContext("assetCriticality", event.target.value as RiskContext["assetCriticality"])}
+                >
+                  {riskContextOptions.assetCriticality.map(([value, label]) => <option value={value} key={value}>{label}</option>)}
+                </select>
+              </label>
+              <label>
+                Exposure
+                <select
+                  value={riskContext.exposure}
+                  onChange={(event) => updateRiskContext("exposure", event.target.value as RiskContext["exposure"])}
+                >
+                  {riskContextOptions.exposure.map(([value, label]) => <option value={value} key={value}>{label}</option>)}
+                </select>
+              </label>
+              <label>
+                Threat context
+                <select
+                  value={riskContext.threatIntel}
+                  onChange={(event) => updateRiskContext("threatIntel", event.target.value as RiskContext["threatIntel"])}
+                >
+                  {riskContextOptions.threatIntel.map(([value, label]) => <option value={value} key={value}>{label}</option>)}
+                </select>
+              </label>
+              <label>
+                Business impact
+                <select
+                  value={riskContext.businessImpact}
+                  onChange={(event) => updateRiskContext("businessImpact", event.target.value as RiskContext["businessImpact"])}
+                >
+                  {riskContextOptions.businessImpact.map(([value, label]) => <option value={value} key={value}>{label}</option>)}
+                </select>
+              </label>
+              <label>
+                Compensating controls
+                <select
+                  value={riskContext.compensatingControls}
+                  onChange={(event) => updateRiskContext("compensatingControls", event.target.value as RiskContext["compensatingControls"])}
+                >
+                  {riskContextOptions.compensatingControls.map(([value, label]) => <option value={value} key={value}>{label}</option>)}
+                </select>
+              </label>
+            </div>
+            <p className="risk-context-note">Threat context is a manual analyst input in Risk v1; SecuriScan does not claim a live threat-intelligence feed.</p>
+          </fieldset>
+
           <fieldset className="scanner-fieldset">
             <legend>Assessment modules</legend>
             <div className="scanner-grid">
@@ -686,6 +906,27 @@ export default function ScanDashboard({ initialUser, registrationEnabled, view, 
             ))}
           </div>
 
+          {report.riskSummary && (
+            <section className="risk-overview" aria-labelledby="risk-overview-title">
+              <div>
+                <p className="eyebrow">Risk prioritization</p>
+                <h3 id="risk-overview-title">Context-aware remediation order</h3>
+                <p>Risk v1 combines scanner severity with business context, exposure, threat activity, exploitability, and controls.</p>
+              </div>
+              <div className="risk-overview-metrics">
+                <div><span>Highest score</span><strong>{report.riskSummary.highestScore}</strong><small>/ 100</small></div>
+                <div><span>Average score</span><strong>{report.riskSummary.averageScore}</strong><small>/ 100</small></div>
+                {riskPriorityOrder.map((priority) => (
+                  <div key={priority} className={`risk-overview-${priority}`}>
+                    <span>{priority}</span>
+                    <strong>{report.riskSummary?.priorities[priority] ?? 0}</strong>
+                    <small>findings</small>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           <section className="scan-coverage" aria-labelledby="coverage-title">
             <div>
               <p className="eyebrow">Coverage</p>
@@ -708,8 +949,20 @@ export default function ScanDashboard({ initialUser, registrationEnabled, view, 
             </div>
           </section>
 
+          <div className="findings-toolbar">
+            <div><strong>Prioritized findings</strong><span>{sortedFindings.length} results</span></div>
+            <label>
+              Sort by
+              <select value={findingSort} onChange={(event) => setFindingSort(event.target.value as typeof findingSort)}>
+                <option value="risk">Risk score</option>
+                <option value="severity">Scanner severity</option>
+                <option value="module">Scanner module</option>
+              </select>
+            </label>
+          </div>
+
           <div className="findings-list">
-            {report.findings.map((finding, index) => (
+            {sortedFindings.map((finding, index) => (
               <FindingCard finding={finding} key={`${finding.title}-${index}`} />
             ))}
           </div>

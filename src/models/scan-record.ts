@@ -1,6 +1,14 @@
 import { Schema, model, models, type Model } from "mongoose";
 
-import type { Finding, ScanSummary, ScannerId } from "@/src/lib/scan-types";
+import type {
+  Finding,
+  FindingRisk,
+  RiskContext,
+  RiskFactor,
+  RiskSummary,
+  ScanSummary,
+  ScannerId,
+} from "@/src/lib/scan-types";
 
 export interface StoredScanRecord {
   ownerId: string;
@@ -11,6 +19,8 @@ export interface StoredScanRecord {
   summary: ScanSummary;
   findings: Finding[];
   scans: Record<string, unknown>;
+  riskContext?: RiskContext;
+  riskSummary?: RiskSummary;
 }
 
 const summarySchema = new Schema<ScanSummary>(
@@ -36,6 +46,34 @@ const findingSchema = new Schema<Finding>(
     cwe: { type: String },
     recommendation: { type: String },
     scan_type: { type: String },
+    risk: {
+      type: new Schema<FindingRisk>(
+        {
+          score: { type: Number, required: true, min: 0, max: 100 },
+          priority: { type: String, required: true, enum: ["critical", "high", "medium", "low"] },
+          cvssEquivalent: { type: Number, required: true, min: 0, max: 10 },
+          modelVersion: { type: String, required: true, enum: ["risk-v1"] },
+          factors: {
+            type: [
+              new Schema<RiskFactor>(
+                {
+                  key: { type: String, required: true },
+                  label: { type: String, required: true },
+                  value: { type: String, required: true },
+                  contribution: { type: Number, required: true },
+                  maxContribution: { type: Number, required: true },
+                  reason: { type: String, required: true },
+                },
+                { _id: false },
+              ),
+            ],
+            default: [],
+          },
+        },
+        { _id: false },
+      ),
+      required: false,
+    },
   },
   { _id: false },
 );
@@ -50,6 +88,8 @@ const scanRecordSchema = new Schema<StoredScanRecord>(
     summary: { type: summarySchema, required: true },
     findings: { type: [findingSchema], default: [] },
     scans: { type: Schema.Types.Mixed, default: {} },
+    riskContext: { type: Schema.Types.Mixed },
+    riskSummary: { type: Schema.Types.Mixed },
   },
   {
     timestamps: true,

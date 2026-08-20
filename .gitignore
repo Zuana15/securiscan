@@ -45,3 +45,11 @@ scanners/__pycache__/
 # Reports
 reports/*.pdf
 !reports/.gitkeep
+
+# Local research and presentation artifacts
+.tmp_*/
+*.inspect.ndjson
+~$*
+Project Proposal.pdf
+SecuriScan_Progress_Presentation*.pptx
+SecuriScan_Research_Article.docx

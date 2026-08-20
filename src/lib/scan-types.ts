@@ -31,6 +31,88 @@ export const SCANNERS: ReadonlyArray<{
 
 export type Severity = "critical" | "high" | "medium" | "low" | "info";
 
+export const ASSET_CRITICALITIES = ["low", "moderate", "high", "critical"] as const;
+export const EXPOSURE_LEVELS = ["internal", "authenticated", "public"] as const;
+export const THREAT_INTEL_LEVELS = ["none", "emerging", "active"] as const;
+export const BUSINESS_IMPACTS = ["low", "moderate", "high", "severe"] as const;
+export const COMPENSATING_CONTROL_LEVELS = ["none", "partial", "strong"] as const;
+
+export type AssetCriticality = (typeof ASSET_CRITICALITIES)[number];
+export type ExposureLevel = (typeof EXPOSURE_LEVELS)[number];
+export type ThreatIntelLevel = (typeof THREAT_INTEL_LEVELS)[number];
+export type BusinessImpact = (typeof BUSINESS_IMPACTS)[number];
+export type CompensatingControlLevel = (typeof COMPENSATING_CONTROL_LEVELS)[number];
+export type RiskPriority = "critical" | "high" | "medium" | "low";
+
+export interface RiskContext {
+  assetCriticality: AssetCriticality;
+  exposure: ExposureLevel;
+  threatIntel: ThreatIntelLevel;
+  businessImpact: BusinessImpact;
+  compensatingControls: CompensatingControlLevel;
+}
+
+export interface RiskFactor {
+  key:
+    | "severity"
+    | "assetCriticality"
+    | "exposure"
+    | "threatIntel"
+    | "businessImpact"
+    | "exploitability"
+    | "compensatingControls";
+  label: string;
+  value: string;
+  contribution: number;
+  maxContribution: number;
+  reason: string;
+}
+
+export interface FindingRisk {
+  score: number;
+  priority: RiskPriority;
+  cvssEquivalent: number;
+  modelVersion: "risk-v1";
+  factors: RiskFactor[];
+}
+
+export interface RiskSummary {
+  averageScore: number;
+  highestScore: number;
+  scoredFindings: number;
+  priorities: Record<RiskPriority, number>;
+}
+
+export interface RiskBenchmarkMetrics {
+  pairwiseAccuracy: number;
+  meanAbsoluteError: number;
+  evaluatedPairs: number;
+}
+
+export interface RiskCalibrationCandidate {
+  id: string;
+  name: string;
+  pairwiseAccuracy: number;
+  meanAbsoluteError: number;
+  selected: boolean;
+}
+
+export interface RiskBenchmarkResult {
+  datasetName: string;
+  labelSource: string;
+  calibrationCases: number;
+  validationCases: number;
+  cvssOnly: RiskBenchmarkMetrics;
+  riskV1: RiskBenchmarkMetrics;
+  percentagePointGain: number;
+  relativeImprovement: number;
+  targetImprovement: number;
+  targetMet: boolean;
+  selectedCandidate: string;
+  candidates: RiskCalibrationCandidate[];
+  limitation: string;
+}
+
 export interface Finding {
   severity: Severity;
   title: string;
@@ -41,6 +123,7 @@ export interface Finding {
   cwe?: string;
   recommendation?: string;
   scan_type?: string;
+  risk?: FindingRisk;
 }
 
 export interface ScanSummary {
@@ -69,6 +152,8 @@ export interface ScanReport {
   summary: ScanSummary;
   findings: Finding[];
   scans: Record<string, ModuleScanResult>;
+  riskContext?: RiskContext;
+  riskSummary?: RiskSummary;
   persistence?: ScanPersistence;
 }
 
@@ -85,6 +170,7 @@ export interface ScanHistoryItem {
   status: string;
   completedAt: string;
   summary: ScanSummary;
+  riskSummary?: RiskSummary;
 }
 
 export interface ScanHistoryResponse {
@@ -119,6 +205,8 @@ export interface ScanAnalytics {
   severity: SeverityBreakdown;
   trend: ScanTrendPoint[];
   scannerFindings: ScannerFindingCount[];
+  risk: RiskSummary;
+  benchmark: RiskBenchmarkResult;
 }
 
 export interface ScanAnalyticsResponse {
