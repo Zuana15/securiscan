@@ -34,7 +34,7 @@ TECH_SIGNATURES = {
     "IIS": [r"Server: Microsoft-IIS", r"X-Powered-By: ASP\.NET"],
     "Cloudflare": [r"cf-ray", r"cloudflare"],
     "Django": [r"csrfmiddlewaretoken", r"__admin_media_prefix__"],
-    "Laravel": [r"laravel_session", r"X-Powered-By: PHP/"],
+    "Laravel": [r"laravel_session", r"<meta name=\"csrf-token\"", r"/vendor/laravel/"],
 }
 
 COMMON_PATHS = {

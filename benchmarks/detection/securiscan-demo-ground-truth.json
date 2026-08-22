@@ -1,0 +1,52 @@
+{
+  "datasetName": "SecuriScan intentionally vulnerable demo v1",
+  "target": "http://127.0.0.1:8080/",
+  "targetDetectionRate": 85,
+  "groundTruthSource": "Cases traced directly to scanners/demo_target.py routes, forms, headers, methods, and responses.",
+  "evidenceBoundary": "Developer-authored local integration benchmark. It verifies the pipeline but is not independent WebGoat/DVWA evidence and must not be presented as the formal Objective 1 result.",
+  "cases": [
+    { "id": "port-8080", "module": "port_scan", "label": "Demo HTTP service on port 8080", "expected": "positive", "match": { "title": "Open port 8080" }, "reference": "demo_target.py PORT" },
+    { "id": "sql-search", "module": "sql_injection", "label": "Error-based SQL injection indicator in search", "expected": "positive", "match": { "title": "Potential SQL Injection", "location": "/search" }, "reference": "demo_target.py /search SQL error branch" },
+    { "id": "xss-search", "module": "xss", "label": "Reflected XSS in search", "expected": "positive", "match": { "title": "Cross-Site Scripting", "location": "/search" }, "reference": "demo_target.py /search reflection" },
+    { "id": "tls-http", "module": "ssl_tls", "label": "HTTP used instead of HTTPS", "expected": "positive", "match": { "title": "Site served over HTTP" }, "reference": "Demo target is HTTP-only" },
+
+    { "id": "header-hsts", "module": "security_headers", "label": "Missing HSTS", "expected": "positive", "match": { "title": "Strict-Transport-Security" }, "reference": "send_demo_headers omits HSTS" },
+    { "id": "header-csp", "module": "security_headers", "label": "Missing CSP", "expected": "positive", "match": { "title": "Content-Security-Policy" }, "reference": "send_demo_headers omits CSP" },
+    { "id": "header-frame", "module": "security_headers", "label": "Missing X-Frame-Options", "expected": "positive", "match": { "title": "X-Frame-Options" }, "reference": "send_demo_headers omits X-Frame-Options" },
+    { "id": "header-nosniff", "module": "security_headers", "label": "Missing X-Content-Type-Options", "expected": "positive", "match": { "title": "X-Content-Type-Options" }, "reference": "send_demo_headers omits X-Content-Type-Options" },
+    { "id": "header-referrer", "module": "security_headers", "label": "Missing Referrer-Policy", "expected": "positive", "match": { "title": "Referrer-Policy" }, "reference": "send_demo_headers omits Referrer-Policy" },
+    { "id": "header-permissions", "module": "security_headers", "label": "Missing Permissions-Policy", "expected": "positive", "match": { "title": "Permissions-Policy" }, "reference": "send_demo_headers omits Permissions-Policy" },
+    { "id": "header-disclosure", "module": "security_headers", "label": "Server technology disclosure", "expected": "positive", "match": { "title": "Technology disclosure in headers" }, "reference": "send_demo_headers and server_version" },
+
+    { "id": "tech-generator", "module": "tech_fingerprint", "label": "Meta generator disclosure", "expected": "positive", "match": { "title": "Meta generator disclosed" }, "reference": "WordPress generator meta element" },
+    { "id": "tech-wordpress", "module": "tech_fingerprint", "label": "WordPress fingerprint", "expected": "positive", "match": { "title": "Technology detected: WordPress" }, "reference": "WordPress generator meta element" },
+    { "id": "tech-react", "module": "tech_fingerprint", "label": "React fingerprint", "expected": "positive", "match": { "title": "Technology detected: React" }, "reference": "__next element id" },
+    { "id": "tech-next", "module": "tech_fingerprint", "label": "Next.js fingerprint", "expected": "positive", "match": { "title": "Technology detected: Next.js" }, "reference": "/_next/static script" },
+    { "id": "tech-jquery", "module": "tech_fingerprint", "label": "jQuery fingerprint", "expected": "positive", "match": { "title": "Technology detected: jQuery" }, "reference": "jquery-3.7.1.min.js script" },
+    { "id": "tech-php", "module": "tech_fingerprint", "label": "PHP fingerprint", "expected": "positive", "match": { "title": "Technology detected: PHP" }, "reference": "X-Powered-By PHP header" },
+
+    { "id": "file-env", "module": "sensitive_files", "label": "Exposed .env", "expected": "positive", "match": { "title": "resource: /.env" }, "reference": "SENSITIVE_RESPONSES /.env" },
+    { "id": "file-git-config", "module": "sensitive_files", "label": "Exposed Git configuration", "expected": "positive", "match": { "title": "resource: /.git/config" }, "reference": "SENSITIVE_RESPONSES /.git/config" },
+    { "id": "file-git-head", "module": "sensitive_files", "label": "Exposed Git HEAD", "expected": "positive", "match": { "title": "resource: /.git/HEAD" }, "reference": "SENSITIVE_RESPONSES /.git/HEAD" },
+    { "id": "file-backup", "module": "sensitive_files", "label": "Exposed database backup", "expected": "positive", "match": { "title": "resource: /backup.sql" }, "reference": "SENSITIVE_RESPONSES /backup.sql" },
+    { "id": "file-config", "module": "sensitive_files", "label": "Exposed PHP configuration", "expected": "positive", "match": { "title": "resource: /config.php" }, "reference": "SENSITIVE_RESPONSES /config.php" },
+    { "id": "file-phpinfo", "module": "sensitive_files", "label": "Exposed phpinfo page", "expected": "positive", "match": { "title": "resource: /phpinfo.php" }, "reference": "SENSITIVE_RESPONSES /phpinfo.php" },
+    { "id": "file-admin", "module": "sensitive_files", "label": "Exposed admin interface", "expected": "positive", "match": { "title": "resource: /admin/" }, "reference": "SENSITIVE_RESPONSES /admin/" },
+    { "id": "file-swagger", "module": "sensitive_files", "label": "Exposed API documentation", "expected": "positive", "match": { "title": "resource: /api/swagger" }, "reference": "SENSITIVE_RESPONSES /api/swagger" },
+
+    { "id": "csrf-transfer", "module": "csrf", "label": "State-changing form without CSRF token", "expected": "positive", "match": { "title": "Form missing CSRF token", "location": "/transfer" }, "reference": "POST /transfer form omits token" },
+
+    { "id": "method-put", "module": "http_misconfiguration", "label": "PUT enabled", "expected": "positive", "match": { "title": "method allowed: PUT" }, "reference": "do_PUT" },
+    { "id": "method-delete", "module": "http_misconfiguration", "label": "DELETE enabled", "expected": "positive", "match": { "title": "method allowed: DELETE" }, "reference": "do_DELETE" },
+    { "id": "method-trace", "module": "http_misconfiguration", "label": "TRACE enabled", "expected": "positive", "match": { "title": "method allowed: TRACE" }, "reference": "do_TRACE" },
+    { "id": "method-connect", "module": "http_misconfiguration", "label": "CONNECT enabled", "expected": "positive", "match": { "title": "method allowed: CONNECT" }, "reference": "do_CONNECT" },
+    { "id": "method-patch", "module": "http_misconfiguration", "label": "PATCH enabled", "expected": "positive", "match": { "title": "method allowed: PATCH" }, "reference": "do_PATCH" },
+    { "id": "open-redirect", "module": "http_misconfiguration", "label": "User-controlled open redirect", "expected": "positive", "match": { "title": "Potential open redirect" }, "reference": "Root url parameter redirect branch" },
+    { "id": "cookie-flags", "module": "http_misconfiguration", "label": "Session cookie missing security flags", "expected": "positive", "match": { "title": "Insecure cookie configuration" }, "reference": "Set-Cookie session=demo-session" },
+    { "id": "cors-wildcard", "module": "http_misconfiguration", "label": "Wildcard CORS", "expected": "positive", "match": { "title": "Permissive CORS policy" }, "reference": "Access-Control-Allow-Origin wildcard" },
+
+    { "id": "negative-sql-clean", "module": "sql_injection", "label": "SQL positive must not be replaced by a clean result", "expected": "negative", "match": { "title": "No SQL injection indicators detected" }, "reference": "SQL error is intentionally present" },
+    { "id": "negative-laravel", "module": "tech_fingerprint", "label": "Generic PHP must not be labelled Laravel", "expected": "negative", "match": { "title": "Technology detected: Laravel" }, "reference": "No Laravel-specific signal in demo_target.py" },
+    { "id": "negative-server-status", "module": "sensitive_files", "label": "Absent server-status resource", "expected": "negative", "match": { "title": "resource: /server-status" }, "reference": "Path is not present in SENSITIVE_RESPONSES" }
+  ]
+}

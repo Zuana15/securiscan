@@ -1,3 +1,5 @@
+import { isValidObjectId } from "mongoose";
+
 import dbConnect, { isMongoConfigured } from "@/src/lib/mongodb";
 import { evaluateRiskBenchmark } from "@/src/lib/risk-benchmark";
 import type {
@@ -66,6 +68,27 @@ export async function listScanHistory(ownerId: string, limit = HISTORY_LIMIT): P
     summary: record.summary,
     riskSummary: record.riskSummary,
   }));
+}
+
+export async function getScanReport(ownerId: string, recordId: string): Promise<ScanReport | null> {
+  if (!isValidObjectId(recordId)) return null;
+
+  await dbConnect();
+  const record = await ScanRecord.findOne({ _id: recordId, ownerId }).lean();
+  if (!record) return null;
+
+  return {
+    target: record.target,
+    scan_type: "full_assessment",
+    timestamp: record.completedAt.toISOString(),
+    status: record.status,
+    summary: record.summary,
+    findings: record.findings,
+    scans: record.scans as ScanReport["scans"],
+    riskContext: record.riskContext,
+    riskSummary: record.riskSummary,
+    persistence: { state: "saved", recordId },
+  };
 }
 
 export async function getScanAnalytics(ownerId: string): Promise<ScanAnalytics> {

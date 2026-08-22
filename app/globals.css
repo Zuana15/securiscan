@@ -164,6 +164,12 @@ h3 { margin-bottom: 0; font-size: 1rem; letter-spacing: -.015em; }
 .history-summary { flex: 0 0 auto; text-align: right; }
 .history-summary strong { color: #173426; font-size: 1.35rem; }
 .history-summary span { margin-top: 2px; color: #64766a; font-size: .7rem; }
+.report-download-button { display: inline-flex; align-items: center; justify-content: center; margin-top: 9px; border: 1px solid #b9cdbf; border-radius: 8px; padding: 7px 10px; background: #fff; color: #1d6848; font-size: .68rem; font-weight: 800; line-height: 1; text-decoration: none; transition: border-color 160ms ease, background 160ms ease, color 160ms ease; }
+.report-download-button:hover { border-color: #63a282; background: #f1f8f4; color: #075d3e; }
+.results-heading-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; }
+.results-heading-actions .report-download-button { margin-top: 0; }
+.report-download-primary { border-color: #0d7452; padding: 9px 12px; background: #0d7452; color: #fff; }
+.report-download-primary:hover { border-color: #075d42; background: #075d42; color: #fff; }
 
 .results { margin-top: 26px; padding: clamp(22px, 4vw, 38px); }
 .results-heading > div > p:last-child { margin: 8px 0 0; color: var(--muted); font-size: .84rem; }
@@ -247,6 +253,7 @@ h3 { margin-bottom: 0; font-size: 1rem; letter-spacing: -.015em; }
   .analytics-metrics { grid-template-columns: 1fr; }
   .analytics-grid { grid-template-columns: 1fr; gap: 24px; }
   .panel-heading, .results-heading, .data-panel-heading { flex-direction: column; }
+  .results-heading-actions { justify-content: flex-start; }
   .module-count, .total-findings { align-self: flex-start; }
   .risk-context-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .risk-overview { grid-template-columns: 1fr; }
@@ -833,6 +840,26 @@ h3 { margin-bottom: 0; font-size: 1rem; letter-spacing: -.015em; }
 }
 .professional-ui.theme-dark .account-mode-button,
 .professional-ui.theme-dark .secondary-button { color: #66d4a2; }
+.professional-ui.theme-dark .report-download-button {
+  border-color: #315847;
+  background: #10221a;
+  color: #75d9aa;
+}
+.professional-ui.theme-dark .report-download-button:hover {
+  border-color: #4d9877;
+  background: #163126;
+  color: #9ce8c3;
+}
+.professional-ui.theme-dark .report-download-primary {
+  border-color: #16835e;
+  background: #0d6e4f;
+  color: #fff;
+}
+.professional-ui.theme-dark .report-download-primary:hover {
+  border-color: #249875;
+  background: #12805d;
+  color: #fff;
+}
 .professional-ui.theme-dark .module-tools {
   border-color: #2b3d36;
   background: #0b1612;

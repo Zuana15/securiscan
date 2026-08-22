@@ -524,6 +524,13 @@ function HistoryPanel({
                     <span>findings · not yet scored</span>
                   </>
                 )}
+                <a
+                  className="report-download-button"
+                  href={`/api/scan-history/${scan.id}/report`}
+                  aria-label={`Download PDF report for ${scan.target}`}
+                >
+                  Download PDF
+                </a>
               </div>
             </article>
           ))}
@@ -886,7 +893,17 @@ export default function ScanDashboard({ initialUser, registrationEnabled, view, 
               <h2 id="results-title">Findings for {report.target}</h2>
               <p>{formatDate(report.timestamp)}</p>
             </div>
-            <span className="total-findings">{report.summary.total_findings} findings</span>
+            <div className="results-heading-actions">
+              {report.persistence?.state === "saved" && report.persistence.recordId && (
+                <a
+                  className="report-download-button report-download-primary"
+                  href={`/api/scan-history/${report.persistence.recordId}/report`}
+                >
+                  Download PDF report
+                </a>
+              )}
+              <span className="total-findings">{report.summary.total_findings} findings</span>
+            </div>
           </div>
 
           {report.persistence && (

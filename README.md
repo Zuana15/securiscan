@@ -104,6 +104,15 @@ gain and 72.98% relative improvement. These developer-authored labels demonstrat
 the mechanism, but they are not independent research proof; a blinded expert-labelled
 WebGoat/DVWA-derived dataset is still required before making the formal 30% claim.
 
+### PDF assessment reports
+
+Every saved assessment can be exported as a professional A4 PDF from the results
+screen or Scan History. Reports include the target and completion time, severity
+summary, module coverage, prioritized findings, evidence, OWASP/CWE labels,
+recommended actions, Risk v1 context, and an interpretation/authorization note.
+The download route performs the same server-side session and ownership checks as
+scan history, so an authenticated user can export only their own stored reports.
+
 Run the risk-model tests with:
 
 ```bash
@@ -115,6 +124,12 @@ Run the benchmark report with:
 ```bash
 npm run risk:benchmark
 ```
+
+The scanner-detection evaluator and labelled local-demo ground truth are in
+`benchmarks/detection/`. The recorded integration result completed all nine modules
+and detected 34/34 developer-labelled positive cases. This is regression evidence,
+not independent WebGoat/DVWA validation; use the included blinded-evaluation
+template before making the formal >85% research claim.
 
 ### Release verification
 
@@ -134,6 +149,7 @@ verify the following authenticated workflow:
 4. Confirm that the scan is saved and appears in **Scan History**.
 5. Confirm that **Analytics** includes the scan and risk-priority totals.
 6. Open a finding and verify its seven-factor risk explanation.
+7. Download the saved PDF report from the results screen and Scan History.
 
 The scan API launches Python as a child process. Next.js may therefore emit a
 non-fatal file-tracing warning while producing a successful build. SecuriScan
@@ -218,4 +234,3 @@ python run_scan.py https://your-target.com --output ../reports/scan-report.json
 - Automated threat-intelligence enrichment
 - RBAC administration and production account provisioning
 - Remediation workflow and ticketing
-- Professional PDF report generation

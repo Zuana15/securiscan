@@ -1,0 +1,17 @@
+{
+  "datasetName": "WebGoat and DVWA blinded evaluation",
+  "target": "REPLACE_WITH_AUTHORIZED_LOCAL_TARGET",
+  "targetDetectionRate": 85,
+  "groundTruthSource": "Replace with exact WebGoat/DVWA versions, lesson identifiers, seeded configurations, and blinded reviewer labels.",
+  "evidenceBoundary": "Template only. Do not report a detection percentage until cases are independently labelled and the frozen scanner report is evaluated.",
+  "cases": [
+    {
+      "id": "replace-with-case-id",
+      "module": "sql_injection",
+      "label": "Replace with the independently verified vulnerability",
+      "expected": "positive",
+      "match": { "title": "replace with expected finding text" },
+      "reference": "Replace with application, version, lesson/page, configuration, and reviewer evidence"
+    }
+  ]
+}

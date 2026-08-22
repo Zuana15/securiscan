@@ -214,6 +214,7 @@ def inject_query_parameter(url: str, parameter: str, value: str) -> str:
 def response_contains_sql_errors(text: str) -> tuple[bool, str]:
     patterns = [
         (r"SQL syntax.*MySQL", "MySQL syntax error"),
+        (r"you have an error in your SQL syntax", "MySQL syntax error"),
         (r"Warning.*mysql_", "MySQL warning"),
         (r"PostgreSQL.*ERROR", "PostgreSQL error"),
         (r"ORA-\d{5}", "Oracle DB error"),

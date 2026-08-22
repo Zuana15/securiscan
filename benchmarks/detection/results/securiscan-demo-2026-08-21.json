@@ -1,0 +1,823 @@
+{
+  "datasetName": "SecuriScan intentionally vulnerable demo v1",
+  "target": "http://127.0.0.1:8080/",
+  "evaluatedAt": "2026-08-21T04:45:09.521Z",
+  "groundTruthSource": "Cases traced directly to scanners/demo_target.py routes, forms, headers, methods, and responses.",
+  "evidenceBoundary": "Developer-authored local integration benchmark. It verifies the pipeline but is not independent WebGoat/DVWA evidence and must not be presented as the formal Objective 1 result.",
+  "targetDetectionRate": 85,
+  "targetMet": true,
+  "moduleCompletion": {
+    "completed": 9,
+    "total": 9,
+    "rate": 100,
+    "failedModules": []
+  },
+  "metrics": {
+    "truePositives": 34,
+    "falseNegatives": 0,
+    "falsePositives": 0,
+    "trueNegatives": 3,
+    "detectionRate": 100,
+    "precision": 100,
+    "specificity": 100,
+    "accuracy": 100
+  },
+  "modules": [
+    {
+      "module": "csrf",
+      "cases": 1,
+      "truePositives": 1,
+      "falseNegatives": 0,
+      "falsePositives": 0,
+      "trueNegatives": 0,
+      "detectionRate": 100,
+      "precision": 100,
+      "specificity": 100,
+      "accuracy": 100
+    },
+    {
+      "module": "http_misconfiguration",
+      "cases": 8,
+      "truePositives": 8,
+      "falseNegatives": 0,
+      "falsePositives": 0,
+      "trueNegatives": 0,
+      "detectionRate": 100,
+      "precision": 100,
+      "specificity": 100,
+      "accuracy": 100
+    },
+    {
+      "module": "port_scan",
+      "cases": 1,
+      "truePositives": 1,
+      "falseNegatives": 0,
+      "falsePositives": 0,
+      "trueNegatives": 0,
+      "detectionRate": 100,
+      "precision": 100,
+      "specificity": 100,
+      "accuracy": 100
+    },
+    {
+      "module": "security_headers",
+      "cases": 7,
+      "truePositives": 7,
+      "falseNegatives": 0,
+      "falsePositives": 0,
+      "trueNegatives": 0,
+      "detectionRate": 100,
+      "precision": 100,
+      "specificity": 100,
+      "accuracy": 100
+    },
+    {
+      "module": "sensitive_files",
+      "cases": 9,
+      "truePositives": 8,
+      "falseNegatives": 0,
+      "falsePositives": 0,
+      "trueNegatives": 1,
+      "detectionRate": 100,
+      "precision": 100,
+      "specificity": 100,
+      "accuracy": 100
+    },
+    {
+      "module": "sql_injection",
+      "cases": 2,
+      "truePositives": 1,
+      "falseNegatives": 0,
+      "falsePositives": 0,
+      "trueNegatives": 1,
+      "detectionRate": 100,
+      "precision": 100,
+      "specificity": 100,
+      "accuracy": 100
+    },
+    {
+      "module": "ssl_tls",
+      "cases": 1,
+      "truePositives": 1,
+      "falseNegatives": 0,
+      "falsePositives": 0,
+      "trueNegatives": 0,
+      "detectionRate": 100,
+      "precision": 100,
+      "specificity": 100,
+      "accuracy": 100
+    },
+    {
+      "module": "tech_fingerprint",
+      "cases": 7,
+      "truePositives": 6,
+      "falseNegatives": 0,
+      "falsePositives": 0,
+      "trueNegatives": 1,
+      "detectionRate": 100,
+      "precision": 100,
+      "specificity": 100,
+      "accuracy": 100
+    },
+    {
+      "module": "xss",
+      "cases": 1,
+      "truePositives": 1,
+      "falseNegatives": 0,
+      "falsePositives": 0,
+      "trueNegatives": 0,
+      "detectionRate": 100,
+      "precision": 100,
+      "specificity": 100,
+      "accuracy": 100
+    }
+  ],
+  "unmatchedFindings": 2,
+  "cases": [
+    {
+      "id": "port-8080",
+      "module": "port_scan",
+      "label": "Demo HTTP service on port 8080",
+      "expected": "positive",
+      "match": {
+        "title": "Open port 8080"
+      },
+      "reference": "demo_target.py PORT",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Open port 8080",
+        "severity": "info",
+        "location": "127.0.0.1:8080",
+        "scan_type": "port_scan"
+      }
+    },
+    {
+      "id": "sql-search",
+      "module": "sql_injection",
+      "label": "Error-based SQL injection indicator in search",
+      "expected": "positive",
+      "match": {
+        "title": "Potential SQL Injection",
+        "location": "/search"
+      },
+      "reference": "demo_target.py /search SQL error branch",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Potential SQL Injection vulnerability",
+        "severity": "high",
+        "location": "GET http://127.0.0.1:8080/search",
+        "cwe": "CWE-89",
+        "owasp": "A03:2021-Injection",
+        "scan_type": "sql_injection"
+      }
+    },
+    {
+      "id": "xss-search",
+      "module": "xss",
+      "label": "Reflected XSS in search",
+      "expected": "positive",
+      "match": {
+        "title": "Cross-Site Scripting",
+        "location": "/search"
+      },
+      "reference": "demo_target.py /search reflection",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Reflected Cross-Site Scripting (XSS)",
+        "severity": "high",
+        "location": "GET http://127.0.0.1:8080/search (field: q)",
+        "cwe": "CWE-79",
+        "owasp": "A03:2021-Injection",
+        "scan_type": "xss"
+      }
+    },
+    {
+      "id": "tls-http",
+      "module": "ssl_tls",
+      "label": "HTTP used instead of HTTPS",
+      "expected": "positive",
+      "match": {
+        "title": "Site served over HTTP"
+      },
+      "reference": "Demo target is HTTP-only",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Site served over HTTP",
+        "severity": "medium",
+        "location": "http://127.0.0.1:8080/",
+        "cwe": "CWE-319",
+        "owasp": "A02:2021-Cryptographic Failures",
+        "scan_type": "ssl_tls"
+      }
+    },
+    {
+      "id": "header-hsts",
+      "module": "security_headers",
+      "label": "Missing HSTS",
+      "expected": "positive",
+      "match": {
+        "title": "Strict-Transport-Security"
+      },
+      "reference": "send_demo_headers omits HSTS",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Missing security header: Strict-Transport-Security",
+        "severity": "medium",
+        "location": "http://127.0.0.1:8080/",
+        "owasp": "A02:2021-Cryptographic Failures",
+        "scan_type": "security_headers"
+      }
+    },
+    {
+      "id": "header-csp",
+      "module": "security_headers",
+      "label": "Missing CSP",
+      "expected": "positive",
+      "match": {
+        "title": "Content-Security-Policy"
+      },
+      "reference": "send_demo_headers omits CSP",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Missing security header: Content-Security-Policy",
+        "severity": "medium",
+        "location": "http://127.0.0.1:8080/",
+        "owasp": "A05:2021-Security Misconfiguration",
+        "scan_type": "security_headers"
+      }
+    },
+    {
+      "id": "header-frame",
+      "module": "security_headers",
+      "label": "Missing X-Frame-Options",
+      "expected": "positive",
+      "match": {
+        "title": "X-Frame-Options"
+      },
+      "reference": "send_demo_headers omits X-Frame-Options",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Missing security header: X-Frame-Options",
+        "severity": "medium",
+        "location": "http://127.0.0.1:8080/",
+        "owasp": "A05:2021-Security Misconfiguration",
+        "scan_type": "security_headers"
+      }
+    },
+    {
+      "id": "header-nosniff",
+      "module": "security_headers",
+      "label": "Missing X-Content-Type-Options",
+      "expected": "positive",
+      "match": {
+        "title": "X-Content-Type-Options"
+      },
+      "reference": "send_demo_headers omits X-Content-Type-Options",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Missing security header: X-Content-Type-Options",
+        "severity": "low",
+        "location": "http://127.0.0.1:8080/",
+        "owasp": "A05:2021-Security Misconfiguration",
+        "scan_type": "security_headers"
+      }
+    },
+    {
+      "id": "header-referrer",
+      "module": "security_headers",
+      "label": "Missing Referrer-Policy",
+      "expected": "positive",
+      "match": {
+        "title": "Referrer-Policy"
+      },
+      "reference": "send_demo_headers omits Referrer-Policy",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Missing security header: Referrer-Policy",
+        "severity": "low",
+        "location": "http://127.0.0.1:8080/",
+        "owasp": "A05:2021-Security Misconfiguration",
+        "scan_type": "security_headers"
+      }
+    },
+    {
+      "id": "header-permissions",
+      "module": "security_headers",
+      "label": "Missing Permissions-Policy",
+      "expected": "positive",
+      "match": {
+        "title": "Permissions-Policy"
+      },
+      "reference": "send_demo_headers omits Permissions-Policy",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Missing security header: Permissions-Policy",
+        "severity": "low",
+        "location": "http://127.0.0.1:8080/",
+        "owasp": "A05:2021-Security Misconfiguration",
+        "scan_type": "security_headers"
+      }
+    },
+    {
+      "id": "header-disclosure",
+      "module": "security_headers",
+      "label": "Server technology disclosure",
+      "expected": "positive",
+      "match": {
+        "title": "Technology disclosure in headers"
+      },
+      "reference": "send_demo_headers and server_version",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Technology disclosure in headers",
+        "severity": "info",
+        "scan_type": "security_headers"
+      }
+    },
+    {
+      "id": "tech-generator",
+      "module": "tech_fingerprint",
+      "label": "Meta generator disclosure",
+      "expected": "positive",
+      "match": {
+        "title": "Meta generator disclosed"
+      },
+      "reference": "WordPress generator meta element",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Meta generator disclosed",
+        "severity": "info",
+        "scan_type": "tech_fingerprint"
+      }
+    },
+    {
+      "id": "tech-wordpress",
+      "module": "tech_fingerprint",
+      "label": "WordPress fingerprint",
+      "expected": "positive",
+      "match": {
+        "title": "Technology detected: WordPress"
+      },
+      "reference": "WordPress generator meta element",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Technology detected: WordPress",
+        "severity": "info",
+        "scan_type": "tech_fingerprint"
+      }
+    },
+    {
+      "id": "tech-react",
+      "module": "tech_fingerprint",
+      "label": "React fingerprint",
+      "expected": "positive",
+      "match": {
+        "title": "Technology detected: React"
+      },
+      "reference": "__next element id",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Technology detected: React",
+        "severity": "info",
+        "scan_type": "tech_fingerprint"
+      }
+    },
+    {
+      "id": "tech-next",
+      "module": "tech_fingerprint",
+      "label": "Next.js fingerprint",
+      "expected": "positive",
+      "match": {
+        "title": "Technology detected: Next.js"
+      },
+      "reference": "/_next/static script",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Technology detected: Next.js",
+        "severity": "info",
+        "scan_type": "tech_fingerprint"
+      }
+    },
+    {
+      "id": "tech-jquery",
+      "module": "tech_fingerprint",
+      "label": "jQuery fingerprint",
+      "expected": "positive",
+      "match": {
+        "title": "Technology detected: jQuery"
+      },
+      "reference": "jquery-3.7.1.min.js script",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Technology detected: jQuery",
+        "severity": "info",
+        "scan_type": "tech_fingerprint"
+      }
+    },
+    {
+      "id": "tech-php",
+      "module": "tech_fingerprint",
+      "label": "PHP fingerprint",
+      "expected": "positive",
+      "match": {
+        "title": "Technology detected: PHP"
+      },
+      "reference": "X-Powered-By PHP header",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Technology detected: PHP",
+        "severity": "info",
+        "scan_type": "tech_fingerprint"
+      }
+    },
+    {
+      "id": "file-env",
+      "module": "sensitive_files",
+      "label": "Exposed .env",
+      "expected": "positive",
+      "match": {
+        "title": "resource: /.env"
+      },
+      "reference": "SENSITIVE_RESPONSES /.env",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Potentially exposed resource: /.env",
+        "severity": "critical",
+        "location": "http://127.0.0.1:8080/.env",
+        "cwe": "CWE-538",
+        "owasp": "A01:2021-Broken Access Control",
+        "scan_type": "sensitive_files"
+      }
+    },
+    {
+      "id": "file-git-config",
+      "module": "sensitive_files",
+      "label": "Exposed Git configuration",
+      "expected": "positive",
+      "match": {
+        "title": "resource: /.git/config"
+      },
+      "reference": "SENSITIVE_RESPONSES /.git/config",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Potentially exposed resource: /.git/config",
+        "severity": "critical",
+        "location": "http://127.0.0.1:8080/.git/config",
+        "cwe": "CWE-538",
+        "owasp": "A01:2021-Broken Access Control",
+        "scan_type": "sensitive_files"
+      }
+    },
+    {
+      "id": "file-git-head",
+      "module": "sensitive_files",
+      "label": "Exposed Git HEAD",
+      "expected": "positive",
+      "match": {
+        "title": "resource: /.git/HEAD"
+      },
+      "reference": "SENSITIVE_RESPONSES /.git/HEAD",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Potentially exposed resource: /.git/HEAD",
+        "severity": "high",
+        "location": "http://127.0.0.1:8080/.git/HEAD",
+        "cwe": "CWE-538",
+        "owasp": "A01:2021-Broken Access Control",
+        "scan_type": "sensitive_files"
+      }
+    },
+    {
+      "id": "file-backup",
+      "module": "sensitive_files",
+      "label": "Exposed database backup",
+      "expected": "positive",
+      "match": {
+        "title": "resource: /backup.sql"
+      },
+      "reference": "SENSITIVE_RESPONSES /backup.sql",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Potentially exposed resource: /backup.sql",
+        "severity": "critical",
+        "location": "http://127.0.0.1:8080/backup.sql",
+        "cwe": "CWE-538",
+        "owasp": "A01:2021-Broken Access Control",
+        "scan_type": "sensitive_files"
+      }
+    },
+    {
+      "id": "file-config",
+      "module": "sensitive_files",
+      "label": "Exposed PHP configuration",
+      "expected": "positive",
+      "match": {
+        "title": "resource: /config.php"
+      },
+      "reference": "SENSITIVE_RESPONSES /config.php",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Potentially exposed resource: /config.php",
+        "severity": "high",
+        "location": "http://127.0.0.1:8080/config.php",
+        "cwe": "CWE-538",
+        "owasp": "A01:2021-Broken Access Control",
+        "scan_type": "sensitive_files"
+      }
+    },
+    {
+      "id": "file-phpinfo",
+      "module": "sensitive_files",
+      "label": "Exposed phpinfo page",
+      "expected": "positive",
+      "match": {
+        "title": "resource: /phpinfo.php"
+      },
+      "reference": "SENSITIVE_RESPONSES /phpinfo.php",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Potentially exposed resource: /phpinfo.php",
+        "severity": "high",
+        "location": "http://127.0.0.1:8080/phpinfo.php",
+        "cwe": "CWE-538",
+        "owasp": "A01:2021-Broken Access Control",
+        "scan_type": "sensitive_files"
+      }
+    },
+    {
+      "id": "file-admin",
+      "module": "sensitive_files",
+      "label": "Exposed admin interface",
+      "expected": "positive",
+      "match": {
+        "title": "resource: /admin/"
+      },
+      "reference": "SENSITIVE_RESPONSES /admin/",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Potentially exposed resource: /admin/",
+        "severity": "medium",
+        "location": "http://127.0.0.1:8080/admin/",
+        "cwe": "CWE-538",
+        "owasp": "A01:2021-Broken Access Control",
+        "scan_type": "sensitive_files"
+      }
+    },
+    {
+      "id": "file-swagger",
+      "module": "sensitive_files",
+      "label": "Exposed API documentation",
+      "expected": "positive",
+      "match": {
+        "title": "resource: /api/swagger"
+      },
+      "reference": "SENSITIVE_RESPONSES /api/swagger",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Potentially exposed resource: /api/swagger",
+        "severity": "info",
+        "location": "http://127.0.0.1:8080/api/swagger",
+        "cwe": "CWE-538",
+        "owasp": "A01:2021-Broken Access Control",
+        "scan_type": "sensitive_files"
+      }
+    },
+    {
+      "id": "csrf-transfer",
+      "module": "csrf",
+      "label": "State-changing form without CSRF token",
+      "expected": "positive",
+      "match": {
+        "title": "Form missing CSRF token",
+        "location": "/transfer"
+      },
+      "reference": "POST /transfer form omits token",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Form missing CSRF token",
+        "severity": "medium",
+        "location": "/transfer",
+        "cwe": "CWE-352",
+        "owasp": "A01:2021-Broken Access Control",
+        "scan_type": "csrf"
+      }
+    },
+    {
+      "id": "method-put",
+      "module": "http_misconfiguration",
+      "label": "PUT enabled",
+      "expected": "positive",
+      "match": {
+        "title": "method allowed: PUT"
+      },
+      "reference": "do_PUT",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Dangerous HTTP method allowed: PUT",
+        "severity": "medium",
+        "location": "http://127.0.0.1:8080/",
+        "cwe": "CWE-650",
+        "owasp": "A05:2021-Security Misconfiguration",
+        "scan_type": "http_misconfiguration"
+      }
+    },
+    {
+      "id": "method-delete",
+      "module": "http_misconfiguration",
+      "label": "DELETE enabled",
+      "expected": "positive",
+      "match": {
+        "title": "method allowed: DELETE"
+      },
+      "reference": "do_DELETE",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Dangerous HTTP method allowed: DELETE",
+        "severity": "medium",
+        "location": "http://127.0.0.1:8080/",
+        "cwe": "CWE-650",
+        "owasp": "A05:2021-Security Misconfiguration",
+        "scan_type": "http_misconfiguration"
+      }
+    },
+    {
+      "id": "method-trace",
+      "module": "http_misconfiguration",
+      "label": "TRACE enabled",
+      "expected": "positive",
+      "match": {
+        "title": "method allowed: TRACE"
+      },
+      "reference": "do_TRACE",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Dangerous HTTP method allowed: TRACE",
+        "severity": "high",
+        "location": "http://127.0.0.1:8080/",
+        "cwe": "CWE-650",
+        "owasp": "A05:2021-Security Misconfiguration",
+        "scan_type": "http_misconfiguration"
+      }
+    },
+    {
+      "id": "method-connect",
+      "module": "http_misconfiguration",
+      "label": "CONNECT enabled",
+      "expected": "positive",
+      "match": {
+        "title": "method allowed: CONNECT"
+      },
+      "reference": "do_CONNECT",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Dangerous HTTP method allowed: CONNECT",
+        "severity": "medium",
+        "location": "http://127.0.0.1:8080/",
+        "cwe": "CWE-650",
+        "owasp": "A05:2021-Security Misconfiguration",
+        "scan_type": "http_misconfiguration"
+      }
+    },
+    {
+      "id": "method-patch",
+      "module": "http_misconfiguration",
+      "label": "PATCH enabled",
+      "expected": "positive",
+      "match": {
+        "title": "method allowed: PATCH"
+      },
+      "reference": "do_PATCH",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Dangerous HTTP method allowed: PATCH",
+        "severity": "medium",
+        "location": "http://127.0.0.1:8080/",
+        "cwe": "CWE-650",
+        "owasp": "A05:2021-Security Misconfiguration",
+        "scan_type": "http_misconfiguration"
+      }
+    },
+    {
+      "id": "open-redirect",
+      "module": "http_misconfiguration",
+      "label": "User-controlled open redirect",
+      "expected": "positive",
+      "match": {
+        "title": "Potential open redirect"
+      },
+      "reference": "Root url parameter redirect branch",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Potential open redirect",
+        "severity": "medium",
+        "cwe": "CWE-601",
+        "owasp": "A01:2021-Broken Access Control",
+        "scan_type": "http_misconfiguration"
+      }
+    },
+    {
+      "id": "cookie-flags",
+      "module": "http_misconfiguration",
+      "label": "Session cookie missing security flags",
+      "expected": "positive",
+      "match": {
+        "title": "Insecure cookie configuration"
+      },
+      "reference": "Set-Cookie session=demo-session",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Insecure cookie configuration",
+        "severity": "medium",
+        "cwe": "CWE-614",
+        "owasp": "A02:2021-Cryptographic Failures",
+        "scan_type": "http_misconfiguration"
+      }
+    },
+    {
+      "id": "cors-wildcard",
+      "module": "http_misconfiguration",
+      "label": "Wildcard CORS",
+      "expected": "positive",
+      "match": {
+        "title": "Permissive CORS policy"
+      },
+      "reference": "Access-Control-Allow-Origin wildcard",
+      "detected": true,
+      "classification": "true_positive",
+      "matchedFinding": {
+        "title": "Permissive CORS policy",
+        "severity": "low",
+        "scan_type": "http_misconfiguration"
+      }
+    },
+    {
+      "id": "negative-sql-clean",
+      "module": "sql_injection",
+      "label": "SQL positive must not be replaced by a clean result",
+      "expected": "negative",
+      "match": {
+        "title": "No SQL injection indicators detected"
+      },
+      "reference": "SQL error is intentionally present",
+      "detected": false,
+      "classification": "true_negative"
+    },
+    {
+      "id": "negative-laravel",
+      "module": "tech_fingerprint",
+      "label": "Generic PHP must not be labelled Laravel",
+      "expected": "negative",
+      "match": {
+        "title": "Technology detected: Laravel"
+      },
+      "reference": "No Laravel-specific signal in demo_target.py",
+      "detected": false,
+      "classification": "true_negative"
+    },
+    {
+      "id": "negative-server-status",
+      "module": "sensitive_files",
+      "label": "Absent server-status resource",
+      "expected": "negative",
+      "match": {
+        "title": "resource: /server-status"
+      },
+      "reference": "Path is not present in SENSITIVE_RESPONSES",
+      "detected": false,
+      "classification": "true_negative"
+    }
+  ]
+}
